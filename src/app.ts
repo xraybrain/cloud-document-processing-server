@@ -1,5 +1,5 @@
 import path from "path";
-import { Application } from 'express';
+import { Application, NextFunction, Request, Response } from 'express';
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -30,7 +30,7 @@ class App {
     this.app.use(express.static(path.resolve(__dirname, '../public/')));
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
-    this.app.use(cors());
+    this.app.use(cors({ allowedHeaders: "*", exposedHeaders: ['X-Access', 'X-Access-Refresh', 'authorization', 'Authorization'], }));
     this.app.use(morgan('dev'));
     this.app.use(refreshExpiredToken);
     this.app.use(deserializeUser);

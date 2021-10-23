@@ -93,6 +93,8 @@ export const loginController = async (req: Request, res: Response) => {
   let { email, password } = req.body;
   let feedback = new Feedback<string>();
 
+  console.log(req.body);
+
   if (!email || !password) {
     feedback.message = 'Both email and password are required';
     feedback.success = false;
@@ -117,7 +119,8 @@ export const loginController = async (req: Request, res: Response) => {
   let token = await createAccessToken(user, `${req.headers['user-agent']}`);
 
   feedback.message = 'success';
-  res.setHeader('x-access', `Bearer ${token}`);
+  res.setHeader('X-Access', `Bearer ${token}`);
+  res.setHeader('access-control-expose-headers', 'x-access');
   res.send(feedback);
 };
 

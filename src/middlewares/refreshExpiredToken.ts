@@ -35,7 +35,7 @@ export const refreshExpiredToken = async (
             // refresh token
             let token = await refreshAccessToken(user, refreshToken.id);
             req.headers['authorization'] = `Bearer ${token}`;
-            res.setHeader('x-access-refresh', `Bearer ${token}`);
+            res.setHeader('X-Access-Refresh', `Bearer ${token}`);
           } else {
             // update valid to false
             updateRefreshToken(decoded.token, { valid: false });
