@@ -11,107 +11,106 @@ generator client {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  firstname String @db.VarChar(30)
-  lastname String @db.VarChar(30)
-  email String @db.VarChar(50) @unique
-  password String @db.Char(60)
-  image String @db.VarChar(250) @default("/assests/avatar.png")
-  role Int @default(2)
-  hasVerifiedEmail Boolean @default(false)
-  documents Document[]
-  shares Share[] @relation()
-  comments Comment[]
-  activities Activity[]
-  tokens RefreshToken[]
+  id               Int            @id @default(autoincrement())
+  firstname        String         @db.VarChar(30)
+  lastname         String         @db.VarChar(30)
+  email            String         @unique @db.VarChar(50)
+  password         String         @db.Char(60)
+  image            String         @default("/assets/avatar.png") @db.Text
+  role             Int            @default(2)
+  hasVerifiedEmail Boolean        @default(false)
+  documents        Document[]
+  shares           Share[]        @relation
+  comments         Comment[]
+  activities       Activity[]
+  tokens           RefreshToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model RefreshToken {
-  id Int @id @default(autoincrement())
-  userId Int
-  userAgent String @db.VarChar(250)
-  token String @db.Text
-  valid Boolean @default(true)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  userAgent String  @db.VarChar(250)
+  token     String  @db.MediumText
+  valid     Boolean @default(true)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Document {
-   id Int @id @default(autoincrement())
-   userId Int
-   mimeType String? @db.VarChar(60)
-   extension String? @db.VarChar(10)
-   url String? @db.Text
-   isFolder Boolean @default(false)
-   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-   comments Comment[]
-   activities Activity[]
-   documentVersions DocumentVersion[] @relation("DocumentVersions")
+  id               Int               @id @default(autoincrement())
+  userId           Int
+  mimeType         String?           @db.VarChar(60)
+  extension        String?           @db.VarChar(10)
+  url              String?           @db.Text
+  isFolder         Boolean           @default(false)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments         Comment[]
+  activities       Activity[]
+  documentVersions DocumentVersion[] @relation("DocumentVersions")
 
-   createdAt DateTime @default(now())
-   updatedAt DateTime @updatedAt
-   deletedAt DateTime?
-}
-
-model DocumentVersion {
-  id String @id @default(cuid())
-  documentId Int
-  folderId Int?
-  userId Int
-  name String @db.VarChar(150)
-  size Decimal? @db.Decimal(10,2)
-  isCurrent Boolean @default(true)
-  isStarred Boolean @default(false)
-  shares Share[]
-  
-  document Document @relation("DocumentVersions",fields: [documentId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 }
 
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId Int
+  folderId   Int?
+  userId     Int
+  name       String   @db.VarChar(150)
+  size       Decimal? @db.Decimal(10, 2)
+  isCurrent  Boolean  @default(true)
+  isStarred  Boolean  @default(false)
+  shares     Share[]
+
+  document Document @relation("DocumentVersions", fields: [documentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
 
 model Share {
-  id Int @id @default(autoincrement())
+  id        Int             @id @default(autoincrement())
   versionId String
-  userId Int?
-  email String @db.VarChar(50)
-  version DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    Int?
+  email     String          @db.VarChar(50)
+  version   DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 }
 
 model Comment {
-  id Int @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   documentId Int
-  userId Int
-  content String @db.VarChar(150)
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  content    String   @db.VarChar(150)
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 }
 
 model Activity {
-  id Int @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   documentId Int
-  userId Int
-  content String @db.VarChar(250)
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  content    String   @db.VarChar(250)
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 }

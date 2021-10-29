@@ -1,15 +1,16 @@
-import { decode, sign, verify } from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import { decode, sign, verify } from "jsonwebtoken";
+import dotenv from "dotenv";
 dotenv.config();
 
 const JWT_SECRET = `${process.env.JWT_SECRET}`;
-const ISSUER = 'Cloud-Document';
+const ISSUER = "Cloud-Document";
 
 export const signToken = (
   payload: { user: number; role: number; token?: number },
-  expires = '1m'
+  expires = "1m"
 ): string => {
-  let token: string = '';
+  let token: string = "";
+  console.log(expires);
   try {
     token = sign(payload, JWT_SECRET, { expiresIn: expires, issuer: ISSUER });
   } catch (error) {
@@ -37,7 +38,7 @@ export const verifyToken = (token: string) => {
 export const decodeToken = async (token: string) => {
   let result: any = null;
   try {
-    result = await decode(token);
+    result = verify(token, JWT_SECRET, { ignoreExpiration: true });
   } catch (error: any) {
     console.log(error);
   }

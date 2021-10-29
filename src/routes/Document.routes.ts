@@ -1,64 +1,69 @@
-import { formidableService } from '../middlewares/uploadDocument';
+import { formidableService } from "../middlewares/uploadDocument";
 const uploader = formidableService();
-import { Application, Request, Response } from 'express';
-import { ensureAuthenticated } from '../middlewares/auth';
-import IRoute from '../models/interfaces/Route.interface';
+import { Application, Request, Response } from "express";
+import { ensureAuthenticated } from "../middlewares/auth";
+import IRoute from "../models/interfaces/Route.interface";
 import {
   copyDocumentsController,
   createDocumentController,
   createFolderController,
+  deleteDocumentsController,
   getDocumentsController,
   getStarredDocumentsController,
   moveDocumentsController,
   renameDocumentController,
-  starDocumentController
-} from '../controllers/document.controllers';
-import { getDocuments } from '../services/document.services';
+  starDocumentController,
+} from "../controllers/document.controllers";
 
 export default class DocumentRoute implements IRoute {
   constructor(protected app: Application) {}
   register() {
     this.app.post(
-      '/document/upload/',
+      "/document/upload/",
       ensureAuthenticated,
       uploader,
       createDocumentController
     );
 
     this.app.post(
-      '/document/folder/',
+      "/document/folder/",
       ensureAuthenticated,
       createFolderController
     );
 
-    this.app.get('/documents/', ensureAuthenticated, getDocumentsController);
+    this.app.get("/documents/", ensureAuthenticated, getDocumentsController);
+    this.app.delete(
+      "/documents/",
+      ensureAuthenticated,
+      deleteDocumentsController
+    );
 
     this.app.post(
-      '/documents/copy/',
+      "/documents/copy/",
       ensureAuthenticated,
       copyDocumentsController
     );
 
     this.app.post(
-      '/documents/move/',
+      "/documents/move/",
       ensureAuthenticated,
-      moveDocumentsController,
+      moveDocumentsController
     );
 
     this.app.post(
-      '/document/rename',
+      "/document/rename",
       ensureAuthenticated,
       renameDocumentController
     );
 
     this.app.post(
-      '/document/star',
+      "/document/star",
       ensureAuthenticated,
       starDocumentController
     );
 
     this.app.get(
-      '/documents/star',
+      "/documents/star",
       ensureAuthenticated,
       getStarredDocumentsController
     );

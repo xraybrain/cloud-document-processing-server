@@ -1,7 +1,7 @@
-import { PrismaClient, Document, DocumentVersion, User } from '@prisma/client';
-import Feedback from '../models/Feedback';
-import DocumentUpload from '../models/interfaces/DocumentUpload.interface.';
-import Pagination from '../models/Pagination';
+import { PrismaClient, Document, DocumentVersion, User } from "@prisma/client";
+import Feedback from "../models/Feedback";
+import DocumentUpload from "../models/interfaces/DocumentUpload.interface.";
+import Pagination from "../models/Pagination";
 
 const prisma = new PrismaClient();
 
@@ -72,13 +72,21 @@ export const createFolder = async (
         },
       });
 
-      feedback.result = await prisma.documentVersion.findFirst({
+      let doc = await prisma.documentVersion.findFirst({
         where: { id: version.id },
         include: { document: true },
       });
 
-      // TODO:
-      // Register create activity
+      feedback.result = doc;
+
+      // register activity
+      await prisma.activity.create({
+        data: {
+          content: "created new folder",
+          documentId: Number(doc?.document.id),
+          userId: userId,
+        },
+      });
     } else {
       feedback.success = false;
       feedback.message = `${raw.name} already exists`;
@@ -96,7 +104,7 @@ export const getDocuments = async (
   userId: number,
   folderId?: number,
   search?: string | undefined,
-  filterBy?: string,
+  isFolder?: boolean
 ) => {
   let pageSize = 20;
   let filter: any = {
@@ -105,7 +113,11 @@ export const getDocuments = async (
     isCurrent: true,
   };
   let feedback = new Feedback<any>();
+
   if (search) filter.name = { contains: search };
+  if (isFolder) {
+    filter.document = { isFolder };
+  }
   try {
     let totalDocuments = await prisma.documentVersion.count({
       where: filter,
@@ -119,14 +131,12 @@ export const getDocuments = async (
       take: pageSize,
       skip: pager.start,
       include: { document: true },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [{ document: { isFolder: "desc" } }, { name: "asc" }],
     });
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to retrieve data';
+    feedback.message = "Failed to retrieve data";
   }
 
   return feedback;
@@ -142,98 +152,157 @@ export const getDocument = async (id: string) => {
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to retrieve document';
+    feedback.message = "Failed to retrieve document";
   }
   return feedback;
 };
 
-export const deleteDocument = async (id: string) => {
+export const deleteDocuments = async (ids: string[], userId: number) => {
   let feedback = new Feedback<boolean>();
   try {
+    let updates = [];
+    let activites = [];
+    for (let id of ids) {
+      let version = await prisma.documentVersion.findFirst({ where: { id } });
+      updates.push(
+        prisma.documentVersion.update({
+          data: {
+            deletedAt: new Date(),
+            isCurrent: false,
+            document: {
+              update: {
+                deletedAt: Date(),
+              },
+            },
+          },
+          where: { id },
+        })
+      );
+      activites.push({
+        content: `deleted ${version?.name}.`,
+        documentId: Number(version?.documentId),
+        userId,
+      });
+    }
+
+    await prisma.$transaction(updates);
+    await prisma.activity.createMany({ data: activites });
+  } catch (error) {
+    feedback.success = false;
+    feedback.message = "Failed to delete document";
+  }
+  return feedback;
+};
+
+const createNewVersion = async (
+  version: DocumentVersion & { document: Document },
+  folderId: number,
+  isDuplicate = true
+) => {
+  let sameCount = await prisma.documentVersion.count({
+    where: {
+      name: { startsWith: version.name },
+      folderId,
+      isCurrent: true,
+    },
+  });
+
+  let newVersion: any;
+
+  if (isDuplicate) {
+    newVersion = await prisma.documentVersion.create({
+      data: {
+        name:
+          sameCount == 0
+            ? `${version?.name}`
+            : `${version?.name} (Copy ${sameCount})`,
+        userId: Number(version?.userId),
+        folderId: folderId,
+        size: version?.size,
+        isCurrent: true,
+        document: {
+          create: {
+            extension: version.document.extension,
+            mimeType: version.document.mimeType,
+            isFolder: version.document.isFolder,
+            url: version.document.url,
+            userId: version.document.userId,
+          },
+        },
+      },
+    });
+  } else {
     await prisma.documentVersion.update({
-      data: {
-        deletedAt: new Date(),
-        document: { update: { deletedAt: new Date() } },
-      },
-      where: { id },
+      data: { isCurrent: false },
+      where: { id: version.id },
     });
-    // TODO:
-    // Register delete activity
-  } catch (error) {
-    feedback.success = false;
-    feedback.message = 'Failed to delete document';
+    newVersion = await prisma.documentVersion.create({
+      data: {
+        name:
+          sameCount == 0
+            ? `${version.name}`
+            : `${version.name} (Copy ${sameCount})`,
+        userId: Number(version.userId),
+        folderId: folderId,
+        size: version.size,
+        isCurrent: true,
+        documentId: Number(version.documentId),
+      },
+    });
   }
-  return feedback;
-};
 
-export const deleteFolder = async (folderId: number) => {
-  let feedback = new Feedback<boolean>();
-  try {
-    await prisma.documentVersion.updateMany({
-      data: {
-        deletedAt: new Date(),
-      },
-      where: { folderId },
+  const latest = await prisma.documentVersion.findFirst({
+    where: { id: newVersion.id },
+    include: { document: true },
+  });
+
+  if (version.document.isFolder) {
+    // get all files in this folder
+    let documents = await prisma.documentVersion.findMany({
+      where: { folderId: version.document.id },
+      include: { document: true },
     });
-    // TODO
-    // Register delete activity
-  } catch (error) {
-    feedback.success = false;
-    feedback.message = 'Failed to delete document';
+    // loop through the docments
+    for (const doc of documents) {
+      // recursive call
+      await createNewVersion(doc, Number(latest?.document.id), isDuplicate);
+    }
   }
-  return feedback;
 };
 
 export const copyDocuments = async (
   docIds: string[],
-  folderId: number
+  folderId: number,
+  userId: number
 ): Promise<Feedback<boolean>> => {
   let feedback = new Feedback<boolean>();
   try {
+    let folder = await prisma.documentVersion.findFirst({
+      where: { documentId: folderId, isCurrent: true },
+    });
+    let activities: any[] = [];
     for (let id of docIds) {
       let version = await prisma.documentVersion.findFirst({
         where: { id },
         include: { document: true },
       });
       if (version) {
-        // check if another copy already exists in folder
-        let sameCount = await prisma.documentVersion.count({
-          where: { name: { startsWith: version.name }, folderId },
+        await createNewVersion(version, folderId);
+        activities.push({
+          content: `copied ${version.name} to ${
+            folder ? folder.name : "cloudify"
+          } folder.`,
+          userId,
+          documentId: Number(version.documentId),
         });
-
-        let newVersion = prisma.documentVersion.create({
-          data: {
-            name:
-              sameCount == 0
-                ? `${version?.name}`
-                : `${version?.name} (Copy ${sameCount})`,
-            userId: Number(version?.userId),
-            folderId: folderId,
-            size: version?.size,
-            isCurrent: true,
-            document: {
-              create: {
-                extension: version.document.extension,
-                mimeType: version.document.mimeType,
-                isFolder: version.document.isFolder,
-                url: version.document.url,
-                userId: version.document.userId,
-              },
-            },
-          },
-        });
-
-        await prisma.$transaction([newVersion]);
-        // TODO:
-        // Register Copy activity
       }
     }
+    await prisma.activity.createMany({ data: activities });
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to copy document(s)';
+    feedback.message = "Failed to copy document(s)";
   }
-
   return feedback;
 };
 
@@ -243,68 +312,57 @@ export const moveDocuments = async (
   user: User
 ) => {
   let feedback = new Feedback<boolean>();
+  let activites = [];
   try {
     for (let id of docIds) {
-      let document = await prisma.documentVersion.findFirst({ where: { id } });
-      if (document) {
-        let updateVersion = prisma.documentVersion.update({
-          data: { isCurrent: false },
-          where: { id },
+      let version = await prisma.documentVersion.findFirst({
+        where: { id },
+        include: { document: true },
+      });
+      if (version) {
+        let folder = await prisma.documentVersion.findFirst({
+          where: { documentId: folderId },
         });
-
-        // check if another copy already exists in folder
-        let sameCount = await prisma.documentVersion.count({
-          where: { name: { startsWith: document.name }, folderId },
-        });
-
-        let newVersion = prisma.documentVersion.create({
-          data: {
-            name:
-              sameCount == 0
-                ? `${document?.name}`
-                : `${document?.name} (Copy ${sameCount})`,
-            userId: Number(document?.userId),
-            folderId: folderId,
-            size: document?.size,
-            isCurrent: true,
-            documentId: Number(document?.documentId),
-          },
-        });
-
-        await prisma.$transaction([updateVersion, newVersion]);
-        await prisma.activity.create({
-          data: {
-            content: `Moved this file`,
-            documentId: Number(document?.documentId),
-            userId: user.id,
-          },
+        await createNewVersion(version, folderId, false);
+        activites.push({
+          content: `moved ${version.name} to ${
+            folder ? folder.name : "cloudify"
+          } folder.`,
+          documentId: Number(version?.documentId),
+          userId: user.id,
         });
       }
     }
+    await prisma.activity.createMany({ data: activites });
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to move document(s)';
+    feedback.message = "Failed to move document(s)";
   }
   return feedback;
 };
 
-// export const moveFolders = async () => {};
-
-// export const copyFolders = async () => {};
-
-export const renameDocument = async (name: string, id: string) => {
+export const renameDocument = async (
+  name: string,
+  id: string,
+  userId: number
+) => {
   let feedback = new Feedback<boolean>();
 
   try {
+    let document = await prisma.documentVersion.findFirst({ where: { id } });
     await prisma.documentVersion.update({ data: { name }, where: { id } });
-    // TODO:
-    // register rename activity
-    // await prisma.$transaction([updateVersion, newVersion]);
+    await prisma.activity.create({
+      data: {
+        content: `Renamed this file from ${document?.name} to ${name}`,
+        documentId: Number(document?.documentId),
+        userId,
+      },
+    });
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to rename document';
+    feedback.message = "Failed to rename document";
   }
 
   return feedback;
@@ -328,7 +386,9 @@ export const starDocument = async (
       });
       await prisma.activity.create({
         data: {
-          content: `${star ? 'Starred' : 'Unstarred'} ${version.name}`,
+          content: `${star ? "added star to" : "removed star from"} ${
+            version.name
+          }`,
           userId,
           documentId: version.documentId,
         },
@@ -337,7 +397,7 @@ export const starDocument = async (
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to add star to document';
+    feedback.message = "Failed to add star to document";
   }
 
   return feedback;
@@ -346,13 +406,13 @@ export const starDocument = async (
 export const getStarredDocuments = async (
   page: number,
   userId: number,
-  search?: string | undefined,
+  search?: string | undefined
 ) => {
   let pageSize = 20;
   let filter: any = {
     userId,
     isCurrent: true,
-    isStarred: true
+    isStarred: true,
   };
   let feedback = new Feedback<any>();
   if (search) filter.name = { contains: search };
@@ -370,13 +430,13 @@ export const getStarredDocuments = async (
       skip: pager.start,
       include: { document: true },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to retrieve data';
+    feedback.message = "Failed to retrieve data";
   }
 
   return feedback;

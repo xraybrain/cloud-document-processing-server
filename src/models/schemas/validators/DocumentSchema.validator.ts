@@ -1,4 +1,4 @@
-import { object, string, number, array, boolean } from 'yup';
+import { object, string, number, array, boolean } from "yup";
 
 export const CreateFolderSchema = object().shape({
   name: string().required().max(150),
@@ -7,7 +7,7 @@ export const CreateFolderSchema = object().shape({
 
 export const UpdateDocumentsSchema = object().shape({
   docsId: array().required().of(string().required()),
-  folderId: number().required(),
+  folderId: number().optional(),
 });
 
 export const RenameDocumentsSchema = object().shape({

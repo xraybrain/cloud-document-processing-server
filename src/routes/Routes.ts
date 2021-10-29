@@ -1,8 +1,9 @@
-import { Application } from 'express';
-import CommentRoute from './Comment.routes';
-import DocumentRoute from './Document.routes';
-import ShareDocumentRoute from './Share.routes';
-import UserRoute from './User.routes';
+import { Application } from "express";
+import ActivityRoute from "./Activity.routes";
+import CommentRoute from "./Comment.routes";
+import DocumentRoute from "./Document.routes";
+import ShareDocumentRoute from "./Share.routes";
+import UserRoute from "./User.routes";
 
 export default class Route {
   constructor(protected app: Application) {
@@ -14,5 +15,6 @@ export default class Route {
     new DocumentRoute(this.app).register();
     new CommentRoute(this.app).register();
     new ShareDocumentRoute(this.app).register();
+    new ActivityRoute(this.app).register();
   }
 }

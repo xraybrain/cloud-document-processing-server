@@ -1,7 +1,7 @@
-import dotenv from 'dotenv';
-import { RefreshToken, PrismaClient, User } from '@prisma/client';
-import Feedback from '../models/Feedback';
-import { signToken } from '../utils/jwt.utils';
+import dotenv from "dotenv";
+import { RefreshToken, PrismaClient, User } from "@prisma/client";
+import Feedback from "../models/Feedback";
+import { signToken } from "../utils/jwt.utils";
 dotenv.config();
 
 const prisma = new PrismaClient();
@@ -10,6 +10,7 @@ export const createAccessToken = async (
   user: User,
   userAgent: string
 ): Promise<string> => {
+  console.log(process.env.REFRESH_TOKEN_TIMEOUT);
   let refreshToken = await createRefreshToken(
     signToken(
       { user: user.id, role: user.role },
@@ -18,6 +19,8 @@ export const createAccessToken = async (
     user.id,
     userAgent
   );
+
+  console.log(refreshToken);
 
   let token = signToken(
     { user: user.id, role: user.role, token: refreshToken?.id },
@@ -86,7 +89,7 @@ export const getRefreshTokens = async (userId: number) => {
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to retrieve data';
+    feedback.message = "Failed to retrieve data";
   }
   return feedback;
 };

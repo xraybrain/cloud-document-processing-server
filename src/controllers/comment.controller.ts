@@ -1,17 +1,17 @@
-import { Request, Response } from 'express';
-import Feedback from '../models/Feedback';
-import AppRequest from '../models/interfaces/AppRequest.interface';
+import { Request, Response } from "express";
+import Feedback from "../models/Feedback";
+import AppRequest from "../models/interfaces/AppRequest.interface";
 import {
   CreateCommentSchema,
   UpdateCommentSchema,
-} from '../models/schemas/validators/CommentSchema.validator';
+} from "../models/schemas/validators/CommentSchema.validator";
 import {
   createComment,
   deleteComment,
   editComment,
   getComments,
-} from '../services/comment.services';
-import { validator } from '../utils/validator.utils';
+} from "../services/comment.services";
+import { validator } from "../utils/validator.utils";
 
 export const createCommentController = async (
   req: AppRequest,
@@ -26,7 +26,7 @@ export const createCommentController = async (
     feedback = await createComment(formData, Number(user?.id));
   } else {
     feedback.success = false;
-    feedback.message = validated.errors.join('<br>');
+    feedback.message = validated.errors.join("<br>");
   }
   res.send(feedback);
 };
@@ -40,7 +40,7 @@ export const getCommentsController = async (req: Request, res: Response) => {
     feedback = await getComments(Number(page), docId);
   } else {
     feedback.success = false;
-    feedback.message = 'This link might be invalid or broken';
+    feedback.message = "This link might be invalid or broken";
     feedback.results = [];
   }
   res.send(feedback);
@@ -54,7 +54,7 @@ export const editCommentController = async (req: AppRequest, res: Response) => {
   if (validated.isValid) {
     feedback = await editComment(formData.content, formData.id);
   } else {
-    feedback.message = validated.errors.join('<br>');
+    feedback.message = validated.errors.join("<br>");
     feedback.success = false;
   }
   res.send(feedback);

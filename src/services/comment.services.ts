@@ -1,13 +1,12 @@
-import { PrismaClient, User } from '@prisma/client';
-import Feedback from '../models/Feedback';
-import Pagination from '../models/Pagination';
+import { PrismaClient, User } from "@prisma/client";
+import Feedback from "../models/Feedback";
+import Pagination from "../models/Pagination";
 
 const prisma = new PrismaClient();
 
 export const createComment = async (data: any, userId: number) => {
   let feedback = new Feedback<any>();
   try {
-    let user = await prisma.user.findFirst({ where: { id: userId } });
     let { id } = await prisma.comment.create({
       data: {
         content: data.content,
@@ -20,7 +19,7 @@ export const createComment = async (data: any, userId: number) => {
     await prisma.activity.create({
       data: {
         content: `commented`,
-        documentId: id,
+        documentId: data.docId,
         userId,
       },
     });
@@ -43,7 +42,7 @@ export const createComment = async (data: any, userId: number) => {
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to post comment';
+    feedback.message = "Failed to post comment";
   }
 
   return feedback;
@@ -60,6 +59,7 @@ export const getComments = async (page: number, docId: number) => {
     feedback.page = page;
     feedback.pages = pager.pages;
     feedback.results = await prisma.comment.findMany({
+      where: { documentId: docId },
       skip: pager.start,
       take: pageSize,
       include: {
@@ -76,7 +76,7 @@ export const getComments = async (page: number, docId: number) => {
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to retrieve comments';
+    feedback.message = "Failed to retrieve comments";
   }
 
   return feedback;
@@ -88,7 +88,7 @@ export const editComment = async (content: string, id: number) => {
     await prisma.comment.update({ data: { content }, where: { id } });
   } catch (error) {
     feedback.success = false;
-    feedback.message = 'Failed to edit comment';
+    feedback.message = "Failed to edit comment";
   }
   return feedback;
 };
@@ -100,7 +100,7 @@ export const deleteComment = async (id: number) => {
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to delete comment';
+    feedback.message = "Failed to delete comment";
   }
   return feedback;
 };
