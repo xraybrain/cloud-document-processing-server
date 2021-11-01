@@ -1,25 +1,27 @@
-import { compareSync } from 'bcryptjs';
-import { Request, Response } from 'express';
+import { compareSync } from "bcryptjs";
+import { Request, Response } from "express";
 import {
   CreateUserSchema,
   UpdateUserPasswordSchema,
   UpdateUserSchema,
-} from '../models/schemas/validators/UserSchema.validator';
-import { validator } from '../utils/validator.utils';
-import Feedback from '../models/Feedback';
+} from "../models/schemas/validators/UserSchema.validator";
+import { validator } from "../utils/validator.utils";
+import Feedback from "../models/Feedback";
 import {
   createUser,
   deleteUser,
   editPassword,
   editUser,
   getUser,
-} from '../services/user.services';
+  getUsers,
+} from "../services/user.services";
 import {
   createAccessToken,
   updateRefreshToken,
-} from '../services/token.services';
-import AppRequest from '../models/interfaces/AppRequest.interface';
-import { decodeToken } from '../utils/jwt.utils';
+} from "../services/token.services";
+import AppRequest from "../models/interfaces/AppRequest.interface";
+import { decodeToken } from "../utils/jwt.utils";
+import DocumentUpload from "../models/interfaces/DocumentUpload.interface.";
 
 export const createUserController = async (req: Request, res: Response) => {
   let feedback = new Feedback<Boolean>();
@@ -30,10 +32,36 @@ export const createUserController = async (req: Request, res: Response) => {
     feedback = await createUser(formData);
     // TODO: send verification email
   } else {
-    feedback.message = validated.errors.join('<br/>');
+    feedback.message = validated.errors.join("<br/>");
     feedback.success = false;
   }
 
+  res.send(feedback);
+};
+
+export const uploadAvatarController = async (
+  req: AppRequest,
+  res: Response
+) => {
+  let uploadFeedback: Feedback<DocumentUpload> = req.body;
+  let feedback: Feedback<any> = new Feedback();
+  let user = req.user;
+  feedback.message = uploadFeedback.message;
+
+  if (uploadFeedback.success) {
+    let upload = (uploadFeedback.results as DocumentUpload[])[0];
+    feedback = await editUser({ image: upload.url, id: user?.id });
+    if (feedback.success) {
+      feedback.result = upload.url;
+    }
+  }
+
+  res.send(feedback);
+};
+
+export const getUsersController = async (req: Request, res: Response) => {
+  let { page, search, userid } = req.query;
+  let feedback = await getUsers(Number(page || 1), `${search}`, Number(userid));
   res.send(feedback);
 };
 
@@ -55,22 +83,27 @@ export const editUserController = async (req: Request, res: Response) => {
   if (validated.isValid) {
     feedback = await editUser(formData);
   } else {
-    feedback.message = validated.errors.join('<br/>');
+    feedback.message = validated.errors.join("<br/>");
     feedback.success = false;
   }
 
   res.send(feedback);
 };
 
-export const changePasswordController = async (req: Request, res: Response) => {
+export const changePasswordController = async (
+  req: AppRequest,
+  res: Response
+) => {
+  let user = req.user;
   let feedback = new Feedback<Boolean>();
   let formData = req.body;
+  formData.id = user?.id;
   let validated = await validator(UpdateUserPasswordSchema, formData);
 
   if (validated.isValid) {
     feedback = await editPassword(formData);
   } else {
-    feedback.message = validated.errors.join('<br/>');
+    feedback.message = validated.errors.join("<br/>");
     feedback.success = false;
   }
 
@@ -83,7 +116,7 @@ export const deleteUserController = async (req: Request, res: Response) => {
     let { id } = req.body;
     feedback = await deleteUser(id);
   } catch (error) {
-    feedback.message = 'Failed to process request';
+    feedback.message = "Failed to process request";
     feedback.success = false;
   }
   res.json(feedback);
@@ -96,7 +129,7 @@ export const loginController = async (req: Request, res: Response) => {
   console.log(req.body);
 
   if (!email || !password) {
-    feedback.message = 'Both email and password are required';
+    feedback.message = "Both email and password are required";
     feedback.success = false;
     return res.send(feedback);
   }
@@ -104,47 +137,50 @@ export const loginController = async (req: Request, res: Response) => {
   let user = await getUser({ email: `${email}` });
 
   if (!user) {
-    feedback.message = 'Wrong email or password combination';
+    feedback.message = "Wrong email or password combination";
     feedback.success = false;
     return res.send(feedback);
   }
 
   if (!compareSync(password, user.password)) {
-    feedback.message = 'Wrong email or password combination';
+    feedback.message = "Wrong email or password combination";
     feedback.success = false;
     return res.send(feedback);
   }
 
   // create access and refresh tokens
-  let token = await createAccessToken(user, `${req.headers['user-agent']}`);
+  let token = await createAccessToken(user, `${req.headers["user-agent"]}`);
 
-  feedback.message = 'success';
-  res.setHeader('X-Access', `Bearer ${token}`);
-  res.setHeader('access-control-expose-headers', 'x-access');
+  feedback.message = "success";
+  res.setHeader("X-Access", `Bearer ${token}`);
+  res.setHeader("access-control-expose-headers", "x-access");
   res.send(feedback);
 };
 
 export const logoutController = async (req: Request, res: Response) => {
   let feedback = new Feedback<boolean>();
   try {
-    let { authorization } = req.headers;
+    let authorization: string = `${
+      req.headers["authorization"] || req.query["authorization"]
+    }`;
+
     if (authorization) {
-      authorization = authorization.split(' ')[1];
+      authorization = authorization.split(" ")[1];
       let decoded = await decodeToken(authorization);
       if (decoded) {
         await updateRefreshToken(decoded.token, { valid: false });
       } else {
         feedback.success = false;
-        feedback.message = 'Invalid token';
+        feedback.message = "Invalid token";
       }
     } else {
       feedback.success = false;
-      feedback.message = 'Token is required';
+      feedback.message = "Token is required";
     }
   } catch (error) {
     console.log(error);
     feedback.success = false;
-    feedback.message = 'Failed to logout';
+    feedback.message = "Failed to logout";
   }
   res.send(feedback);
 };

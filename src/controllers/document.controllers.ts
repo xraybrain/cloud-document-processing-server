@@ -14,6 +14,7 @@ import {
   createDocuments,
   createFolder,
   deleteDocuments,
+  getDocument,
   getDocuments,
   getStarredDocuments,
   moveDocuments,
@@ -82,15 +83,22 @@ export const getDocumentsController = async (
   req: AppRequest,
   res: Response
 ) => {
-  let { folder, page, search, isfolder } = req.query;
+  let { folder, page, search, star, isfolder } = req.query;
   let user = req.user;
   let feedback = await getDocuments(
     page ? Number(page) : 1,
     Number(user?.id),
     folder ? Number(folder) : undefined,
+    `${star}` === "true",
     search ? `${search}` : "",
     `${isfolder}` === "true"
   );
+  res.send(feedback);
+};
+
+export const getDocumentController = async (req: AppRequest, res: Response) => {
+  let { id } = req.query;
+  let feedback = await getDocument(`${id}`);
   res.send(feedback);
 };
 

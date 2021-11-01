@@ -21,7 +21,6 @@ export const refreshExpiredToken = async (
     let verifiedAccessToken = verifyToken(authorization);
 
     if (verifiedAccessToken.expired) {
-      console.log("expired");
       let decoded = await decodeToken(authorization);
       if (decoded) {
         let user = await getUser({ id: decoded.user });
@@ -31,21 +30,19 @@ export const refreshExpiredToken = async (
           valid: true,
         });
 
-        console.log("verifying token", refreshToken, decoded);
-
         if (refreshToken && user) {
-          console.log("refreshing");
           let verified = verifyToken(refreshToken.token);
           if (!verified.expired) {
             console.log("refreshed");
             // refresh token
             let token = await refreshAccessToken(user, refreshToken.id);
-            console.log(token);
-            req.headers["authorization"] = `Bearer ${token}`;
-            res.setHeader("X-Refresh", `Bearer ${token}`);
+            let tokenize = `Bearer ${token}`;
+            req.headers["authorization"] = tokenize;
+            res.setHeader("X-Refresh", tokenize);
           } else {
             // update valid to false
             updateRefreshToken(decoded.token, { valid: false });
+            req.headers["authorization"] = "";
           }
         }
       }

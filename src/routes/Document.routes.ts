@@ -8,6 +8,7 @@ import {
   createDocumentController,
   createFolderController,
   deleteDocumentsController,
+  getDocumentController,
   getDocumentsController,
   getStarredDocumentsController,
   moveDocumentsController,
@@ -32,6 +33,7 @@ export default class DocumentRoute implements IRoute {
     );
 
     this.app.get("/documents/", ensureAuthenticated, getDocumentsController);
+    this.app.get("/document/", ensureAuthenticated, getDocumentController);
     this.app.delete(
       "/documents/",
       ensureAuthenticated,

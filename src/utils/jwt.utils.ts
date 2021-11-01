@@ -6,11 +6,10 @@ const JWT_SECRET = `${process.env.JWT_SECRET}`;
 const ISSUER = "Cloud-Document";
 
 export const signToken = (
-  payload: { user: number; role: number; token?: number },
+  payload: { user: number; role?: number; token?: number; doc?: string },
   expires = "1m"
 ): string => {
   let token: string = "";
-  console.log(expires);
   try {
     token = sign(payload, JWT_SECRET, { expiresIn: expires, issuer: ISSUER });
   } catch (error) {
@@ -40,7 +39,7 @@ export const decodeToken = async (token: string) => {
   try {
     result = verify(token, JWT_SECRET, { ignoreExpiration: true });
   } catch (error: any) {
-    console.log(error);
+    // console.log(error);
   }
   return result;
 };

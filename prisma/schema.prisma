@@ -79,8 +79,7 @@ model DocumentVersion {
 model Share {
   id        Int             @id @default(autoincrement())
   versionId String
-  userId    Int?
-  email     String          @db.VarChar(50)
+  userId    Int
   version   DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
   user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
 

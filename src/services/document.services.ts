@@ -55,7 +55,7 @@ export const createFolder = async (
   try {
     // check if folder exists
     let exists = await prisma.documentVersion.findFirst({
-      where: { name: raw.name, folderId: raw.folderId },
+      where: { name: raw.name, folderId: raw.folderId, userId },
     });
     if (!exists) {
       let version = await prisma.documentVersion.create({
@@ -103,6 +103,7 @@ export const getDocuments = async (
   page: number,
   userId: number,
   folderId?: number,
+  star?: boolean,
   search?: string | undefined,
   isFolder?: boolean
 ) => {
@@ -111,10 +112,12 @@ export const getDocuments = async (
     folderId: folderId || null,
     userId,
     isCurrent: true,
+    deletedAt: { equals: null },
   };
   let feedback = new Feedback<any>();
 
   if (search) filter.name = { contains: search };
+  if (star) filter.isStarred = true;
   if (isFolder) {
     filter.document = { isFolder };
   }
@@ -126,13 +129,14 @@ export const getDocuments = async (
     feedback.page = page;
     feedback.pages = pager.pages;
 
-    feedback.results = await prisma.documentVersion.findMany({
+    const temp = await prisma.documentVersion.findMany({
       where: filter,
       take: pageSize,
       skip: pager.start,
       include: { document: true },
       orderBy: [{ document: { isFolder: "desc" } }, { name: "asc" }],
     });
+    feedback.results = temp.map((d) => ({ ...d, isOwner: true }));
   } catch (error) {
     console.log(error);
     feedback.success = false;
@@ -168,12 +172,6 @@ export const deleteDocuments = async (ids: string[], userId: number) => {
         prisma.documentVersion.update({
           data: {
             deletedAt: new Date(),
-            isCurrent: false,
-            document: {
-              update: {
-                deletedAt: Date(),
-              },
-            },
           },
           where: { id },
         })
@@ -188,6 +186,7 @@ export const deleteDocuments = async (ids: string[], userId: number) => {
     await prisma.$transaction(updates);
     await prisma.activity.createMany({ data: activites });
   } catch (error) {
+    console.log(error);
     feedback.success = false;
     feedback.message = "Failed to delete document";
   }

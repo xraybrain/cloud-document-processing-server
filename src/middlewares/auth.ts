@@ -11,8 +11,6 @@ export const ensureAuthenticated = async (
     req.headers["authorization"] || `${req.query["authorization"]}`;
   let feedback = new Feedback<string>();
 
-  console.log("Auth:: ", req.headers["authorization"]);
-
   if (!authorization) {
     feedback.success = false;
     feedback.message = "unauthorized";

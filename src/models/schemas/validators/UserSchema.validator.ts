@@ -1,5 +1,5 @@
-import { ref } from 'yup';
-import { object, string, number } from 'yup';
+import { ref } from "yup";
+import { object, string, number } from "yup";
 
 export const CreateUserSchema = object().shape({
   firstname: string().required().max(40),
@@ -18,8 +18,8 @@ export const UpdateUserSchema = object().shape({
 export const UpdateUserPasswordSchema = object().shape({
   password: string().required().min(4).max(16),
   confirmPassword: string().test(
-    'password-match',
-    'Password must match',
+    "password-match",
+    "Password must match",
     function (value) {
       return this.parent.password === value;
     }

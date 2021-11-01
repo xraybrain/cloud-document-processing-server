@@ -8,6 +8,7 @@ import Route from "./routes/Routes";
 import { PrismaClient } from "@prisma/client";
 import { deserializeUser } from "./middlewares/deserializeUser";
 import { refreshExpiredToken } from "./middlewares/refreshExpiredToken";
+import exphbs from "express-handlebars";
 
 dotenv.config();
 
@@ -37,6 +38,9 @@ class App {
       })
     );
     this.app.use(morgan("dev"));
+    this.app.engine("hbs", exphbs({ defaultLayout: "main", extname: "hbs" }));
+    this.app.set("view engine", "hbs");
+    this.app.set("views", path.join(__dirname, "../views"));
     this.app.use(refreshExpiredToken);
     this.app.use(deserializeUser);
   }
