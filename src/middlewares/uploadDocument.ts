@@ -75,6 +75,8 @@ export const formidableService =
                 document.url = c.secure_url;
                 feedback.message += `${file.name} uploaded successfully.`;
                 feedback.results?.push(document);
+                console.log(document);
+                console.log(feedback);
               } catch (error) {
                 feedback.message += `An error occured while uploading ${file.name}.`;
               }

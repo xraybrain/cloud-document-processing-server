@@ -109,6 +109,8 @@ var formidableService = function (uploadDir) { return function (req, res, next) 
                             document.url = c.secure_url;
                             feedback.message += file.name + " uploaded successfully.";
                             (_a = feedback.results) === null || _a === void 0 ? void 0 : _a.push(document);
+                            console.log(document);
+                            console.log(feedback);
                             return [3 /*break*/, 4];
                         case 3:
                             error_1 = _c.sent();
