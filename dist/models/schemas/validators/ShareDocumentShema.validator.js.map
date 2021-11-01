@@ -1,0 +1,1 @@
+{"version":3,"file":"ShareDocumentShema.validator.js","sourceRoot":"","sources":["../../../../src/models/schemas/validators/ShareDocumentShema.validator.ts"],"names":[],"mappings":";;;AAAA,2BAA6D;AAEhD,QAAA,mBAAmB,GAAG,IAAA,YAAM,GAAE,CAAC,KAAK,CAAC;IAChD,KAAK,EAAE,IAAA,YAAM,GAAE,CAAC,QAAQ,EAAE;IAC1B,IAAI,EAAE,IAAA,YAAM,GAAE,CAAC,QAAQ,EAAE;CAC1B,CAAC,CAAC"}

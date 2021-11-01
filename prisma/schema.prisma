@@ -16,11 +16,11 @@ model User {
   lastname         String         @db.VarChar(30)
   email            String         @unique @db.VarChar(50)
   password         String         @db.Char(60)
-  image            String         @default("/assets/avatar.png") @db.Text
+  image            String         @default("/assets/avatar.png") @db.VarChar(250)
   role             Int            @default(2)
   hasVerifiedEmail Boolean        @default(false)
   documents        Document[]
-  shares           Share[]        @relation
+  shares           Share[]
   comments         Comment[]
   activities       Activity[]
   tokens           RefreshToken[]
@@ -81,7 +81,7 @@ model Share {
   versionId String
   userId    Int
   version   DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

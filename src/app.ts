@@ -25,10 +25,15 @@ class App {
     this.init();
 
     new Route(this.app);
+    this.app.all("*", (req: Request, res: Response, next: NextFunction) => {
+      console.log("app toute");
+      res.sendFile(path.resolve(__dirname, "../client/index.html"));
+    });
   }
 
   settings() {
     this.app.use(express.static(path.join(__dirname, "../public")));
+    this.app.use(express.static(path.join(__dirname, "../client")));
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
     this.app.use(

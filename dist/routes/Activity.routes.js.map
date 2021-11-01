@@ -1,0 +1,1 @@
+{"version":3,"file":"Activity.routes.js","sourceRoot":"","sources":["../../src/routes/Activity.routes.ts"],"names":[],"mappings":";;AACA,4CAA0D;AAE1D,0EAA6E;AAE7E;IACE,uBAAsB,GAAgB;QAAhB,QAAG,GAAH,GAAG,CAAa;IAAG,CAAC;IAC1C,gCAAQ,GAAR;QACE,IAAI,CAAC,GAAG,CAAC,GAAG,CACV,uBAAuB,EACvB,0BAAmB,EACnB,6CAAuB,CACxB,CAAC;IACJ,CAAC;IACH,oBAAC;AAAD,CAAC,AATD,IASC"}
