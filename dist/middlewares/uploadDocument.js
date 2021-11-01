@@ -80,9 +80,9 @@ var formidableService = function (uploadDir) { return function (req, res, next) 
             // Loop through upload files
             uploadFiles.forEach(function (file, index) { return __awaiter(void 0, void 0, void 0, function () {
                 var tempPath, document, c, error_1, fileName, data, newUploadDir;
-                var _a;
-                return __generator(this, function (_b) {
-                    switch (_b.label) {
+                var _a, _b;
+                return __generator(this, function (_c) {
+                    switch (_c.label) {
                         case 0:
                             tempPath = file.path;
                             document = {
@@ -100,17 +100,18 @@ var formidableService = function (uploadDir) { return function (req, res, next) 
                             if (!canUpload) return [3 /*break*/, 6];
                             feedback.formData = fields;
                             if (!(process.env.NODE_ENV === "production")) return [3 /*break*/, 5];
-                            _b.label = 1;
+                            _c.label = 1;
                         case 1:
-                            _b.trys.push([1, 3, , 4]);
+                            _c.trys.push([1, 3, , 4]);
                             return [4 /*yield*/, cloudinary_1.v2.uploader.upload(tempPath)];
                         case 2:
-                            c = _b.sent();
+                            c = _c.sent();
                             document.url = c.secure_url;
                             feedback.message += file.name + " uploaded successfully.";
+                            (_a = feedback.results) === null || _a === void 0 ? void 0 : _a.push(document);
                             return [3 /*break*/, 4];
                         case 3:
-                            error_1 = _b.sent();
+                            error_1 = _c.sent();
                             feedback.message += "An error occured while uploading " + file.name + ".";
                             return [3 /*break*/, 4];
                         case 4: return [3 /*break*/, 6];
@@ -122,13 +123,13 @@ var formidableService = function (uploadDir) { return function (req, res, next) 
                                 fs_1.default.writeFileSync(newUploadDir, data);
                                 feedback.message += file.name + " uploaded successfully";
                                 document.url = "/" + uploadTo.replace(/(\.\.\/)+?(public\/)?/g, "") + "/" + fileName;
-                                (_a = feedback.results) === null || _a === void 0 ? void 0 : _a.push(document);
+                                (_b = feedback.results) === null || _b === void 0 ? void 0 : _b.push(document);
                             }
                             catch (error) {
                                 feedback.message += "An error occured while uploading " + file.name + ".";
                                 console.log(error);
                             }
-                            _b.label = 6;
+                            _c.label = 6;
                         case 6: return [2 /*return*/];
                     }
                 });
