@@ -33,6 +33,8 @@ export const createDocumentController = async (
   let { folder } = uploadFeedback.formData || {};
   let user = req.user;
 
+  console.log(uploadFeedback);
+
   try {
     if (uploadFeedback.results) {
       // save

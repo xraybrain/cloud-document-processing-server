@@ -54,6 +54,7 @@ var createDocumentController = function (req, res) { return __awaiter(void 0, vo
                 feedback.message = uploadFeedback.message;
                 folder = (uploadFeedback.formData || {}).folder;
                 user = req.user;
+                console.log(uploadFeedback);
                 _a.label = 1;
             case 1:
                 _a.trys.push([1, 4, , 5]);
