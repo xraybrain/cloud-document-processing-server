@@ -31,7 +31,7 @@ export const formidableService =
     feedback.results = [];
     let canUpload = true;
 
-    form.parse(req, (err, fields, files) => {
+    form.parse(req, async (err, fields, files) => {
       if (err) {
         console.log("Form Parse Error: ", err);
         feedback.success = false;
@@ -48,7 +48,7 @@ export const formidableService =
         }
 
         // Loop through upload files
-        uploadFiles.forEach(async (file, index) => {
+        for (let file of uploadFiles){
           let tempPath = file.path;
           let document: DocumentUpload = {
             size: file.size,
@@ -101,7 +101,7 @@ export const formidableService =
               }
             }
           }
-        });
+        };
         req.body = feedback;
         next();
       } else {

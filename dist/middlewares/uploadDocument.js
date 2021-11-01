@@ -62,90 +62,97 @@ var formidableService = function (uploadDir) { return function (req, res, next) 
     feedback.message = "";
     feedback.results = [];
     var canUpload = true;
-    form.parse(req, function (err, fields, files) {
-        if (err) {
-            console.log("Form Parse Error: ", err);
-            feedback.success = false;
-            feedback.message = "Failed to process upload.";
-            canUpload = false;
-        }
-        if (files.upload !== undefined) {
-            var uploadFiles = void 0;
-            if (files.upload instanceof Array) {
-                uploadFiles = files.upload;
-            }
-            else {
-                uploadFiles = [files.upload];
-            }
-            // Loop through upload files
-            uploadFiles.forEach(function (file, index) { return __awaiter(void 0, void 0, void 0, function () {
-                var tempPath, document, c, error_1, fileName, data, newUploadDir;
-                var _a, _b;
-                return __generator(this, function (_c) {
-                    switch (_c.label) {
-                        case 0:
-                            tempPath = file.path;
-                            document = {
-                                size: file.size,
-                                name: "" + file.name,
-                                type: "" + file.type,
-                                extension: path_1.default.extname(file.name).replace(".", ""),
-                                url: "",
-                            };
-                            if (exceedMaxFileSize(file.size)) {
-                                canUpload = false;
-                                feedback.message = "filesize must between " + MAX_FILE_SIZE / (1000 * 1000) + " mb";
-                                feedback.success = false;
-                            }
-                            if (!canUpload) return [3 /*break*/, 6];
-                            feedback.formData = fields;
-                            if (!(process.env.NODE_ENV === "production")) return [3 /*break*/, 5];
-                            _c.label = 1;
-                        case 1:
-                            _c.trys.push([1, 3, , 4]);
-                            return [4 /*yield*/, cloudinary_1.v2.uploader.upload(tempPath)];
-                        case 2:
-                            c = _c.sent();
-                            document.url = c.secure_url;
-                            feedback.message += file.name + " uploaded successfully.";
-                            (_a = feedback.results) === null || _a === void 0 ? void 0 : _a.push(document);
-                            console.log(document);
-                            console.log(feedback);
-                            return [3 /*break*/, 4];
-                        case 3:
-                            error_1 = _c.sent();
-                            feedback.message += "An error occured while uploading " + file.name + ".";
-                            return [3 /*break*/, 4];
-                        case 4: return [3 /*break*/, 6];
-                        case 5:
-                            try {
-                                fileName = "" + Date.now() + path_1.default.extname(file.name);
-                                data = fs_1.default.readFileSync(tempPath);
-                                newUploadDir = path_1.default.resolve(__dirname, uploadTo, fileName);
-                                fs_1.default.writeFileSync(newUploadDir, data);
-                                feedback.message += file.name + " uploaded successfully";
-                                document.url = "/" + uploadTo.replace(/(\.\.\/)+?(public\/)?/g, "") + "/" + fileName;
-                                (_b = feedback.results) === null || _b === void 0 ? void 0 : _b.push(document);
-                            }
-                            catch (error) {
-                                feedback.message += "An error occured while uploading " + file.name + ".";
-                                console.log(error);
-                            }
-                            _c.label = 6;
-                        case 6: return [2 /*return*/];
+    form.parse(req, function (err, fields, files) { return __awaiter(void 0, void 0, void 0, function () {
+        var uploadFiles, _i, uploadFiles_1, file, tempPath, document_1, c, error_1, fileName, data, newUploadDir;
+        var _a, _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    if (err) {
+                        console.log("Form Parse Error: ", err);
+                        feedback.success = false;
+                        feedback.message = "Failed to process upload.";
+                        canUpload = false;
                     }
-                });
-            }); });
-            req.body = feedback;
-            next();
-        }
-        else {
-            feedback.success = false;
-            feedback.message = "Missing 'upload' field";
-            req.body = feedback;
-            next();
-        }
-    });
+                    if (!(files.upload !== undefined)) return [3 /*break*/, 9];
+                    uploadFiles = void 0;
+                    if (files.upload instanceof Array) {
+                        uploadFiles = files.upload;
+                    }
+                    else {
+                        uploadFiles = [files.upload];
+                    }
+                    _i = 0, uploadFiles_1 = uploadFiles;
+                    _c.label = 1;
+                case 1:
+                    if (!(_i < uploadFiles_1.length)) return [3 /*break*/, 8];
+                    file = uploadFiles_1[_i];
+                    tempPath = file.path;
+                    document_1 = {
+                        size: file.size,
+                        name: "" + file.name,
+                        type: "" + file.type,
+                        extension: path_1.default.extname(file.name).replace(".", ""),
+                        url: "",
+                    };
+                    if (exceedMaxFileSize(file.size)) {
+                        canUpload = false;
+                        feedback.message = "filesize must between " + MAX_FILE_SIZE / (1000 * 1000) + " mb";
+                        feedback.success = false;
+                    }
+                    if (!canUpload) return [3 /*break*/, 7];
+                    feedback.formData = fields;
+                    if (!(process.env.NODE_ENV === "production")) return [3 /*break*/, 6];
+                    _c.label = 2;
+                case 2:
+                    _c.trys.push([2, 4, , 5]);
+                    return [4 /*yield*/, cloudinary_1.v2.uploader.upload(tempPath)];
+                case 3:
+                    c = _c.sent();
+                    document_1.url = c.secure_url;
+                    feedback.message += file.name + " uploaded successfully.";
+                    (_a = feedback.results) === null || _a === void 0 ? void 0 : _a.push(document_1);
+                    console.log(document_1);
+                    console.log(feedback);
+                    return [3 /*break*/, 5];
+                case 4:
+                    error_1 = _c.sent();
+                    feedback.message += "An error occured while uploading " + file.name + ".";
+                    return [3 /*break*/, 5];
+                case 5: return [3 /*break*/, 7];
+                case 6:
+                    try {
+                        fileName = "" + Date.now() + path_1.default.extname(file.name);
+                        data = fs_1.default.readFileSync(tempPath);
+                        newUploadDir = path_1.default.resolve(__dirname, uploadTo, fileName);
+                        fs_1.default.writeFileSync(newUploadDir, data);
+                        feedback.message += file.name + " uploaded successfully";
+                        document_1.url = "/" + uploadTo.replace(/(\.\.\/)+?(public\/)?/g, "") + "/" + fileName;
+                        (_b = feedback.results) === null || _b === void 0 ? void 0 : _b.push(document_1);
+                    }
+                    catch (error) {
+                        feedback.message += "An error occured while uploading " + file.name + ".";
+                        console.log(error);
+                    }
+                    _c.label = 7;
+                case 7:
+                    _i++;
+                    return [3 /*break*/, 1];
+                case 8:
+                    ;
+                    req.body = feedback;
+                    next();
+                    return [3 /*break*/, 10];
+                case 9:
+                    feedback.success = false;
+                    feedback.message = "Missing 'upload' field";
+                    req.body = feedback;
+                    next();
+                    _c.label = 10;
+                case 10: return [2 /*return*/];
+            }
+        });
+    }); });
 }; };
 exports.formidableService = formidableService;
 //# sourceMappingURL=uploadDocument.js.map
