@@ -22,9 +22,14 @@ var App = /** @class */ (function () {
         this.settings();
         this.init();
         new Routes_1.default(this.app);
+        this.app.all("*", function (req, res, next) {
+            console.log("app toute");
+            res.sendFile(path_1.default.resolve(__dirname, "../client/index.html"));
+        });
     }
     App.prototype.settings = function () {
         this.app.use(express_1.default.static(path_1.default.join(__dirname, "../public")));
+        this.app.use(express_1.default.static(path_1.default.join(__dirname, "../client")));
         this.app.use(express_1.default.urlencoded({ extended: true }));
         this.app.use(express_1.default.json());
         this.app.use((0, cors_1.default)({
