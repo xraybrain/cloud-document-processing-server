@@ -74,6 +74,7 @@ export const formidableService =
                 let c = await cloudinary.uploader.upload(tempPath);
                 document.url = c.secure_url;
                 feedback.message += `${file.name} uploaded successfully.`;
+                feedback.results?.push(document);
               } catch (error) {
                 feedback.message += `An error occured while uploading ${file.name}.`;
               }
