@@ -41,7 +41,7 @@ export const createDocumentController = async (
       feedback = await createDocuments(
         uploadFeedback.results,
         Number(user?.id),
-        folder ? Number(folder) : null
+        folder && !isNaN(Number(folder)) ? Number(folder) : null
       );
     }
 
@@ -92,7 +92,7 @@ export const getDocumentsController = async (
     Number(user?.id),
     folder ? Number(folder) : undefined,
     `${star}` === "true",
-    search ? `${search}` : "",
+    search && search !== "undefined" ? `${search}` : "",
     `${isfolder}` === "true"
   );
   res.send(feedback);
