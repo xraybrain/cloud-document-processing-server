@@ -59,7 +59,7 @@ var createDocumentController = function (req, res) { return __awaiter(void 0, vo
             case 1:
                 _a.trys.push([1, 4, , 5]);
                 if (!uploadFeedback.results) return [3 /*break*/, 3];
-                return [4 /*yield*/, (0, document_services_1.createDocuments)(uploadFeedback.results, Number(user === null || user === void 0 ? void 0 : user.id), folder ? Number(folder) : null)];
+                return [4 /*yield*/, (0, document_services_1.createDocuments)(uploadFeedback.results, Number(user === null || user === void 0 ? void 0 : user.id), folder && !isNaN(Number(folder)) ? Number(folder) : null)];
             case 2:
                 // save
                 feedback = _a.sent();
@@ -128,7 +128,7 @@ var getDocumentsController = function (req, res) { return __awaiter(void 0, void
             case 0:
                 _a = req.query, folder = _a.folder, page = _a.page, search = _a.search, star = _a.star, isfolder = _a.isfolder;
                 user = req.user;
-                return [4 /*yield*/, (0, document_services_1.getDocuments)(page ? Number(page) : 1, Number(user === null || user === void 0 ? void 0 : user.id), folder ? Number(folder) : undefined, "" + star === "true", search ? "" + search : "", "" + isfolder === "true")];
+                return [4 /*yield*/, (0, document_services_1.getDocuments)(page ? Number(page) : 1, Number(user === null || user === void 0 ? void 0 : user.id), folder ? Number(folder) : undefined, "" + star === "true", search && search !== "undefined" ? "" + search : "", "" + isfolder === "true")];
             case 1:
                 feedback = _b.sent();
                 res.send(feedback);
