@@ -33,7 +33,7 @@ export default class DocumentRoute implements IRoute {
     );
 
     this.app.get("/documents/", ensureAuthenticated, getDocumentsController);
-    this.app.get("/document/", ensureAuthenticated, getDocumentController);
+    this.app.get("/document/", getDocumentController);
     this.app.delete(
       "/documents/",
       ensureAuthenticated,
